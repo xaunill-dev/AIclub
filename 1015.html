@@ -2,707 +2,285 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日本 47 都道府縣制霸互動圖 (用戶查詢版)</title>
-  
-  <!-- D3.js & TopoJSON CDN -->
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://unpkg.com/topojson-client@3"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GPS 位置回報系統</title>
+  <!-- 引入 Tailwind CSS 以快速構建精美 UI -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --text-main: #2d3748;
-      --text-sub: #718096;
-      --primary: #3182ce;
-      --primary-hover: #2b6cb0;
-      --border-color: #e2e8f0;
-      
-      /* 次數對應顏色 */
-      --c-0: #E0E0E0;
-      --c-1: #4CAF50;
-      --c-2: #FFEB3B;
-      --c-3: #FF9800;
-      --c-4: #F44336;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    /* 玻璃擬物化與深色科技感樣式 */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Hiragino Kaku Gothic ProN", sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1.25rem 2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
     }
-
-    .main-container {
-      flex: 1;
-      max-width: 1440px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 1.5rem;
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 1.5rem;
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     }
-
-    /* 左側面板 */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
+    .input-field {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: all 0.3s ease;
     }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 1.25rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      border: 1px solid var(--border-color);
-    }
-
-    .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    /* 搜尋區塊 */
-    .search-box {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .search-input {
-      flex: 1;
-      padding: 0.65rem 0.85rem;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 0.95rem;
+    .input-field:focus {
       outline: none;
-      transition: border-color 0.2s;
+      border-color: #3b82f6;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+      background: rgba(0, 0, 0, 0.4);
     }
-
-    .search-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
-    }
-
-    .btn {
-      padding: 0.65rem 1.25rem;
-      border: none;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn:hover {
-      background: var(--primary-hover);
-    }
-
-    .quick-tags {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-
-    .tag-btn {
-      padding: 0.25rem 0.6rem;
-      background: #edf2f7;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tag-btn:hover, .tag-btn.active {
-      background: #ebf8ff;
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    /* 統計資訊 */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-top: 0.5rem;
-    }
-
-    .stat-item {
-      background: #f7fafc;
-      padding: 0.85rem;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-sub);
-      margin-bottom: 0.25rem;
-    }
-
-    .stat-value {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .progress-bar-container {
-      margin-top: 1rem;
-      background: #edf2f7;
-      border-radius: 999px;
-      height: 10px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4CAF50, #F44336);
-      width: 0%;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* 圖例說明 */
-    .legend-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      font-size: 0.85rem;
-      gap: 0.75rem;
-    }
-
-    .legend-color-box {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      border: 1px solid rgba(0,0,0,0.1);
-      flex-shrink: 0;
-    }
-
-    /* 右側地圖區 */
-    .map-card {
-      position: relative;
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 1rem;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 600px;
-    }
-
-    #map-svg {
-      width: 100%;
-      height: 100%;
-      max-height: 750px;
-    }
-
-    .prefecture {
-      stroke: #ffffff;
-      stroke-width: 0.8;
-      cursor: pointer;
-      transition: fill 0.3s ease, stroke 0.2s ease, opacity 0.2s ease;
-    }
-
-    .prefecture:hover {
-      stroke: #2d3748;
-      stroke-width: 1.8;
-      opacity: 0.9;
-    }
-
-    /* Tooltip */
-    .tooltip {
-      position: absolute;
-      pointer-events: none;
-      background: rgba(26, 32, 44, 0.92);
-      color: #fff;
-      padding: 0.5rem 0.85rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      opacity: 0;
-      transition: opacity 0.15s ease-in-out;
-      transform: translate(-50%, -120%);
-      z-index: 100;
-      white-space: nowrap;
-    }
-
-    .tooltip-name {
-      font-weight: 700;
-      margin-bottom: 2px;
-    }
-
-    .tooltip-count {
-      color: #cbd5e0;
-      font-size: 0.8rem;
-    }
-
-    /* 載入中狀態 */
-    .loading-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0.85);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      z-index: 10;
-    }
-
+    /* 載入動畫 Spinner */
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e2e8f0;
-      border-top-color: var(--primary);
+      border: 3px solid rgba(255, 255, 255, 0.2);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 0.75rem;
+      border-top: 3px solid #ffffff;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* RWD 響應式配置 */
-    @media (max-width: 960px) {
-      .main-container {
-        grid-template-columns: 1fr;
-      }
-      .map-card {
-        min-height: 480px;
-      }
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
     }
   </style>
 </head>
-<body>
+<body class="p-4 sm:p-8">
 
-  <header>
-    <h1>🗾 日本 47 都道府縣制霸互動圖</h1>
-  </header>
-
-  <main class="main-container">
-    <!-- 左側控制與資訊欄 -->
-    <aside class="sidebar">
-      
-      <!-- 查詢卡片 -->
-      <section class="card">
-        <h2 class="card-title">🔍 用戶代號查詢</h2>
-        <div class="search-box">
-          <input type="text" id="user-input" class="search-input" placeholder="輸入 C01 ~ C05" maxlength="5">
-          <button id="search-btn" class="btn">查詢</button>
-        </div>
-        <div class="quick-tags">
-          <span style="font-size: 0.8rem; color: var(--text-sub); align-self: center;">快捷選取：</span>
-          <button class="tag-btn" onclick="selectUser('C01')">C01</button>
-          <button class="tag-btn" onclick="selectUser('C02')">C02</button>
-          <button class="tag-btn" onclick="selectUser('C03')">C03</button>
-          <button class="tag-btn" onclick="selectUser('C04')">C04</button>
-          <button class="tag-btn" onclick="selectUser('C05')">C05</button>
-        </div>
-      </section>
-
-      <!-- 統計數據卡片 -->
-      <section class="card">
-        <h2 class="card-title">📊 制霸成就統計</h2>
-        <div style="font-size: 0.95rem; font-weight: 600; color: var(--primary);" id="user-name-display">
-          用戶：載入中...
-        </div>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-label">解鎖縣市</div>
-            <div class="stat-value" id="stat-count">0 / 47</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">制霸率</div>
-            <div class="stat-value" id="stat-rate">0.0%</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">總造訪人次/次數</div>
-            <div class="stat-value" id="stat-total-visits">0 次</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">最高頻次縣市</div>
-            <div class="stat-value" style="font-size: 1.1rem;" id="stat-top-pref">-</div>
-          </div>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" id="progress-fill"></div>
-        </div>
-      </section>
-
-      <!-- 圖例說明卡片 -->
-      <section class="card">
-        <h2 class="card-title">🎨 圖例說明 (造訪頻次)</h2>
-        <div class="legend-list">
-          <div class="legend-item">
-            <div class="legend-color-box" style="background-color: var(--c-0);"></div>
-            <span><strong>0 次</strong>：未曾造訪 (灰色 #E0E0E0)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color-box" style="background-color: var(--c-1);"></div>
-            <span><strong>1 次</strong>：初次探索 (綠色 #4CAF50)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color-box" style="background-color: var(--c-2);"></div>
-            <span><strong>2 次</strong>：二度重溫 (黃色 #FFEB3B)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color-box" style="background-color: var(--c-3);"></div>
-            <span><strong>3 次</strong>：深度走訪 (橘色 #FF9800)</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color-box" style="background-color: var(--c-4);"></div>
-            <span><strong>4 次 (含) 以上</strong>：制霸常客 (紅色 #F44336)</span>
-          </div>
-        </div>
-      </section>
-
-    </aside>
-
-    <!-- 右側地圖顯示區 -->
-    <section class="map-card">
-      <div id="loading" class="loading-overlay">
-        <div class="spinner"></div>
-        <div style="font-size: 0.9rem; color: var(--text-sub);">正在繪製日本地圖向量資料...</div>
+  <div class="glass-card w-full max-w-md p-8 rounded-2xl">
+    <div class="flex flex-col items-center mb-8">
+      <!-- 裝飾性 Icon -->
+      <div class="bg-blue-500/20 p-3 rounded-full mb-3 shadow-lg shadow-blue-500/20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
       </div>
-      <div id="tooltip" class="tooltip"></div>
-      <svg id="map-svg" viewBox="0 0 850 750"></svg>
-    </section>
-  </main>
+      <h2 class="text-2xl font-bold tracking-wider text-gray-100">GPS 位置回報系統</h2>
+    </div>
+
+    <div class="space-y-6">
+      <!-- 團隊編號 -->
+      <div>
+        <label for="teamCode" class="block text-sm font-medium text-gray-300 mb-1.5">團隊編號 <span class="text-red-400">*</span></label>
+        <input type="text" id="teamCode" class="input-field w-full px-4 py-3 rounded-xl text-lg placeholder-gray-500" placeholder="例如: T-001" required>
+      </div>
+
+      <!-- 姓名暱稱 -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-300 mb-1.5">姓名暱稱 <span class="text-gray-500 text-xs">(選填)</span></label>
+        <input type="text" id="name" class="input-field w-full px-4 py-3 rounded-xl text-lg placeholder-gray-500" placeholder="請輸入姓名或暱稱">
+      </div>
+
+      <!-- 送出按鈕 -->
+      <button id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/30 flex justify-center items-center group">
+        <span id="btnText" class="tracking-wide">取得位置並送出</span>
+      </button>
+
+      <!-- 狀態與訊息顯示區塊 -->
+      <div id="statusMessage" class="text-center text-sm mt-4 hidden p-3 rounded-xl transition-all duration-300 font-medium"></div>
+    </div>
+  </div>
 
   <script>
-    /* ==========================================================================
-       1. 日本 47 都道府縣標準名稱與 JIS 編碼參照表
-       ========================================================================== */
-    const PREFECTURES_REF = [
-      { id: 1, nameZh: "北海道", nameJa: "北海道" },
-      { id: 2, nameZh: "青森縣", nameJa: "青森県" },
-      { id: 3, nameZh: "岩手縣", nameJa: "岩手県" },
-      { id: 4, nameZh: "宮城縣", nameJa: "宮城県" },
-      { id: 5, nameZh: "秋田縣", nameJa: "秋田県" },
-      { id: 6, nameZh: "山形縣", nameJa: "山形県" },
-      { id: 7, nameZh: "福島縣", nameJa: "福島県" },
-      { id: 8, nameZh: "茨城縣", nameJa: "茨城県" },
-      { id: 9, nameZh: "栃木縣", nameJa: "栃木県" },
-      { id: 10, nameZh: "群馬縣", nameJa: "群馬県" },
-      { id: 11, nameZh: "埼玉縣", nameJa: "埼玉県" },
-      { id: 12, nameZh: "千葉縣", nameJa: "千葉県" },
-      { id: 13, nameZh: "東京都", nameJa: "東京都" },
-      { id: 14, nameZh: "神奈川縣", nameJa: "神奈川県" },
-      { id: 15, nameZh: "新潟縣", nameJa: "新潟県" },
-      { id: 16, nameZh: "富山縣", nameJa: "富山県" },
-      { id: 17, nameZh: "石川縣", nameJa: "石川県" },
-      { id: 18, nameZh: "福井縣", nameJa: "福井県" },
-      { id: 19, nameZh: "山梨縣", nameJa: "山梨県" },
-      { id: 20, nameZh: "長野縣", nameJa: "長野県" },
-      { id: 21, nameZh: "岐阜縣", nameJa: "岐阜県" },
-      { id: 22, nameZh: "靜岡縣", nameJa: "静岡県" },
-      { id: 23, nameZh: "愛知縣", nameJa: "愛知県" },
-      { id: 24, nameZh: "三重縣", nameJa: "三重県" },
-      { id: 25, nameZh: "滋賀縣", nameJa: "滋賀県" },
-      { id: 26, nameZh: "京都府", nameJa: "京都府" },
-      { id: 27, nameZh: "大阪府", nameJa: "大阪府" },
-      { id: 28, nameZh: "兵庫縣", nameJa: "兵庫県" },
-      { id: 29, nameZh: "奈良縣", nameJa: "奈良県" },
-      { id: 30, nameZh: "和歌山縣", nameJa: "和歌山県" },
-      { id: 31, nameZh: "鳥取縣", nameJa: "鳥取県" },
-      { id: 32, nameZh: "島根縣", nameJa: "島根県" },
-      { id: 33, nameZh: "岡山縣", nameJa: "岡山県" },
-      { id: 34, nameZh: "廣島縣", nameJa: "広島県" },
-      { id: 35, nameZh: "山口縣", nameJa: "山口県" },
-      { id: 36, nameZh: "德島縣", nameJa: "徳島県" },
-      { id: 37, nameZh: "香川縣", nameJa: "香川県" },
-      { id: 38, nameZh: "愛媛縣", nameJa: "愛媛県" },
-      { id: 39, nameZh: "高知縣", nameJa: "高知県" },
-      { id: 40, nameZh: "福岡縣", nameJa: "福岡県" },
-      { id: 41, nameZh: "佐賀縣", nameJa: "佐賀県" },
-      { id: 42, nameZh: "長崎縣", nameJa: "長崎県" },
-      { id: 43, nameZh: "熊本縣", nameJa: "熊本県" },
-      { id: 44, nameZh: "大分縣", nameJa: "大分県" },
-      { id: 45, nameZh: "宮崎縣", nameJa: "宮崎県" },
-      { id: 46, nameZh: "鹿兒島縣", nameJa: "鹿児島県" },
-      { id: 47, nameZh: "沖繩縣", nameJa: "沖縄県" }
-    ];
+    // ⚠️ 替換為您的 Google Apps Script Web App URL
+    const API_URL = "在此填入您的_GAS_Web_App_網址"; 
 
-    /* ==========================================================================
-       2. Mock Database (若更換 Excel 資料，可直接貼至此處物件結構)
-       支援中日文全名或省略縣/市字樣
-       ========================================================================== */
-    const USER_DATABASE = {
-      "C01": {
-        name: "C01 (東京與關東微旅行)",
-        visits: {
-          "東京都": 5, "神奈川縣": 3, "千葉縣": 2, "埼玉縣": 1,
-          "山梨縣": 1, "靜岡縣": 2, "長野縣": 1, "栃木縣": 1
+    // DOM 元素選取
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const statusMsg = document.getElementById('statusMessage');
+    const teamCodeInput = document.getElementById('teamCode');
+    const nameInput = document.getElementById('name');
+
+    // 1. 裝置識別 UUID 生成與儲存機制
+    function getDeviceUUID() {
+      let uuid = localStorage.getItem('device_uuid');
+      if (!uuid) {
+        // 若環境支援 crypto 則使用標準 API，否則使用降級方案 (Fallback)
+        if (window.crypto && crypto.randomUUID) {
+          uuid = crypto.randomUUID();
+        } else {
+          uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
         }
-      },
-      "C02": {
-        name: "C02 (京阪神深度玩家)",
-        visits: {
-          "大阪府": 6, "京都府": 4, "兵庫縣": 3, "奈良縣": 2,
-          "滋賀縣": 1, "和歌山縣": 1, "三重縣": 2
-        }
-      },
-      "C03": {
-        name: "C03 (九州全境愛好者)",
-        visits: {
-          "福岡縣": 4, "熊本縣": 3, "長崎縣": 2, "大分縣": 2,
-          "佐賀縣": 1, "宮崎縣": 1, "鹿兒島縣": 3, "沖繩縣": 4
-        }
-      },
-      "C04": {
-        name: "C04 (全日本大滿貫達人)",
-        visits: {
-          "北海道": 4, "青森縣": 2, "岩手縣": 1, "宮城縣": 3, "秋田縣": 1, "山形縣": 2, "福島縣": 2,
-          "茨城縣": 1, "栃木縣": 2, "群馬縣": 1, "埼玉縣": 3, "千葉縣": 4, "東京都": 7, "神奈川縣": 5,
-          "新潟縣": 2, "富山縣": 1, "石川縣": 3, "福井縣": 1, "山梨縣": 2, "長野縣": 3, "岐阜縣": 2,
-          "靜岡縣": 3, "愛知縣": 4, "三重縣": 2, "滋賀縣": 2, "京都府": 5, "大阪府": 6, "兵庫縣": 3,
-          "奈良縣": 2, "和歌山縣": 1, "鳥取縣": 1, "島根縣": 1, "岡山縣": 2, "廣島縣": 3, "山口縣": 2,
-          "德島縣": 1, "香川縣": 2, "愛媛縣": 2, "高知縣": 1, "福岡縣": 4, "佐賀縣": 1, "長崎縣": 2,
-          "熊本縣": 2, "大分縣": 2, "宮崎縣": 1, "鹿兒島縣": 2, "沖繩縣": 4
-        }
-      },
-      "C05": {
-        name: "C05 (初次解鎖自由行)",
-        visits: {
-          "東京都": 2, "千葉縣": 1
-        }
+        localStorage.setItem('device_uuid', uuid);
       }
-    };
-
-    /* ==========================================================================
-       3. 核心變數與顏色分級
-       ========================================================================== */
-    let currentPrefectureFeatures = [];
-    let currentActiveUserId = "C01";
-
-    function getColorByCount(count) {
-      if (!count || count <= 0) return "#E0E0E0"; // 0次
-      if (count === 1) return "#4CAF50";          // 1次
-      if (count === 2) return "#FFEB3B";          // 2次
-      if (count === 3) return "#FF9800";          // 3次
-      return "#F44336";                           // 4次以上
+      return uuid;
     }
 
-    // 將外部傳入的名稱標準化並對應至 JIS ID
-    function getVisitCountForPref(prefId, userVisits) {
-      if (!userVisits) return 0;
-      const ref = PREFECTURES_REF.find(p => p.id === prefId);
-      if (!ref) return 0;
+    // 2. 獲取精準的亞洲/台北時間 (YYYY/MM/DD HH:MM)
+    function getTaipeiTime() {
+      const now = new Date();
+      // 使用 Intl.DateTimeFormat 以確保時區正確，不受設備當前本地時區干擾
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false // 24小時制
+      });
+      
+      const parts = formatter.formatToParts(now);
+      let year, month, day, hour, minute;
+      
+      parts.forEach(part => {
+        if (part.type === 'year') year = part.value;
+        if (part.type === 'month') month = part.value;
+        if (part.type === 'day') day = part.value;
+        if (part.type === 'hour') hour = part.value;
+        if (part.type === 'minute') minute = part.value;
+      });
 
-      // 支援比對繁體中文名、日文漢字名、簡短名
-      for (const [key, val] of Object.entries(userVisits)) {
-        const cleanKey = key.trim();
-        if (
-          cleanKey === ref.nameZh || 
-          cleanKey === ref.nameJa ||
-          cleanKey === ref.nameZh.replace(/[縣府道]$/, '') ||
-          cleanKey === ref.nameJa.replace(/[県府道]$/, '')
-        ) {
-          return val;
-        }
+      // 防呆：若時鐘格式化失敗（極少數舊瀏覽器），使用基本替換
+      if (!year) {
+         return now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
       }
-      return 0;
+
+      // 當時間是 24:00 時，修正為 00
+      if (hour === '24') hour = '00';
+
+      return `${year}/${month}/${day} ${hour}:${minute}`;
     }
 
-    /* ==========================================================================
-       4. D3 地圖初始化與繪製
-       ========================================================================== */
-    const svg = d3.select("#map-svg");
-    const tooltip = document.getElementById("tooltip");
+    // 3. 狀態提示 UI 控制
+    function setStatus(type, message) {
+      statusMsg.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'border-red-500/50', 
+                                 'bg-green-500/20', 'text-green-400', 'border-green-500/50', 
+                                 'bg-blue-500/20', 'text-blue-400', 'border-blue-500/50', 'border');
+      
+      statusMsg.classList.add('border'); // 共用 border 屬性
 
-    async function initMap() {
-      try {
-        // 使用知名且穩定的 Japan TopoJSON 來源
-        const response = await fetch("https://cdn.jsdelivr.net/npm/japan-atlas@1/japan/japan-prefectures.json");
-        if (!response.ok) throw new Error("地圖圖資讀取失敗");
-        const topoData = await response.json();
+      if (type === 'error') {
+        statusMsg.classList.add('bg-red-500/20', 'text-red-400', 'border-red-500/50');
+      } else if (type === 'success') {
+        statusMsg.classList.add('bg-green-500/20', 'text-green-400', 'border-green-500/50');
+      } else if (type === 'info') {
+        statusMsg.classList.add('bg-blue-500/20', 'text-blue-400', 'border-blue-500/50');
+      }
+      
+      statusMsg.innerHTML = message;
+    }
 
-        // 轉換為 GeoJSON Features
-        const firstKey = Object.keys(topoData.objects)[0];
-        const geojson = topojson.feature(topoData, topoData.objects[firstKey]);
-        currentPrefectureFeatures = geojson.features;
-
-        // 設定地圖投影 (縮放適配 850x750 畫布)
-        const projection = d3.geoMercator().fitExtent([[30, 30], [820, 720]], geojson);
-        const pathGenerator = d3.geoPath().projection(projection);
-
-        // 隱藏載入動畫
-        document.getElementById("loading").style.display = "none";
-
-        // 繪製各都道府縣
-        svg.selectAll(".prefecture")
-          .data(geojson.features)
-          .enter()
-          .append("path")
-          .attr("class", "prefecture")
-          .attr("d", pathGenerator)
-          .attr("id", d => `pref-${Number(d.id)}`)
-          .on("mousemove", handleMouseMove)
-          .on("mouseleave", handleMouseLeave);
-
-        // 預設渲染 C01
-        renderUser(currentActiveUserId);
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById("loading").innerHTML = `
-          <div style="color: #e53e3e; text-align: center; padding: 1rem;">
-            ⚠️ 地圖載入失敗，請確認網路是否可連線至 jsdelivr CDN。<br>
-            <small>${err.message}</small>
-          </div>
-        `;
+    // 控制按鈕狀態
+    function setButtonState(state) {
+      if (state === 'locating') {
+        btn.disabled = true;
+        btn.classList.add('opacity-70', 'cursor-not-allowed');
+        btnText.innerHTML = '<span class="spinner"></span> 正在定位...';
+      } else if (state === 'sending') {
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="spinner"></span> 傳送資料中...';
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        btnText.innerHTML = '取得位置並送出';
       }
     }
 
-    /* ==========================================================================
-       5. 畫面渲染與數據更新
-       ========================================================================== */
-    function renderUser(userId) {
-      const normalizedId = userId.trim().toUpperCase();
-      const userData = USER_DATABASE[normalizedId];
+    // 4. 按鈕點擊主流程
+    btn.addEventListener('click', () => {
+      const teamCode = teamCodeInput.value.trim();
+      const name = nameInput.value.trim();
 
-      if (!userData) {
-        alert(`找不到用戶代號 [${userId}]，請輸入 C01 ~ C05 進行測試。`);
+      // 檢查必填欄位
+      if (!teamCode) {
+        teamCodeInput.focus();
+        setStatus('error', '❌ 錯誤：請輸入「團隊編號」');
         return;
       }
 
-      currentActiveUserId = normalizedId;
-      document.getElementById("user-input").value = normalizedId;
-
-      // 更新快捷標籤狀態
-      document.querySelectorAll(".tag-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.textContent.trim() === normalizedId);
-      });
-
-      // 統計指標計算
-      let visitedCount = 0;
-      let totalVisits = 0;
-      let maxVisitPref = "-";
-      let maxVisitVal = 0;
-
-      PREFECTURES_REF.forEach(pref => {
-        const count = getVisitCountForPref(pref.id, userData.visits);
-        if (count > 0) {
-          visitedCount += 1;
-          totalVisits += count;
-          if (count > maxVisitVal) {
-            maxVisitVal = count;
-            maxVisitPref = `${pref.nameZh} (${count}次)`;
-          }
-        }
-
-        // 以過渡動畫更新 SVG 顏色
-        d3.select(`#pref-${pref.id}`)
-          .transition()
-          .duration(350)
-          .attr("fill", getColorByCount(count));
-      });
-
-      const rate = ((visitedCount / 47) * 100).toFixed(1);
-
-      // 更新側邊欄文字
-      document.getElementById("user-name-display").textContent = `用戶：${userData.name}`;
-      document.getElementById("stat-count").textContent = `${visitedCount} / 47`;
-      document.getElementById("stat-rate").textContent = `${rate}%`;
-      document.getElementById("stat-total-visits").textContent = `${totalVisits} 次`;
-      document.getElementById("stat-top-pref").textContent = maxVisitPref;
-
-      // 進度條寬度更新
-      document.getElementById("progress-fill").style.width = `${rate}%`;
-    }
-
-    /* ==========================================================================
-       6. 互動事件 (Tooltip & Search)
-       ========================================================================== */
-    function handleMouseMove(event, d) {
-      const prefId = Number(d.id);
-      const prefInfo = PREFECTURES_REF.find(p => p.id === prefId);
-      if (!prefInfo) return;
-
-      const userData = USER_DATABASE[currentActiveUserId];
-      const count = getVisitCountForPref(prefId, userData ? userData.visits : null);
-
-      tooltip.innerHTML = `
-        <div class="tooltip-name">${prefInfo.nameZh} (${prefInfo.nameJa})</div>
-        <div class="tooltip-count">造訪次數：<strong>${count}</strong> 次</div>
-      `;
-      tooltip.style.opacity = "1";
-
-      const mapCardRect = document.querySelector(".map-card").getBoundingClientRect();
-      const left = event.clientX - mapCardRect.left;
-      const top = event.clientY - mapCardRect.top;
-
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
-    }
-
-    function handleMouseLeave() {
-      tooltip.style.opacity = "0";
-    }
-
-    function selectUser(userId) {
-      renderUser(userId);
-    }
-
-    // 查詢按鈕點擊
-    document.getElementById("search-btn").addEventListener("click", () => {
-      const val = document.getElementById("user-input").value;
-      if (val) renderUser(val);
-    });
-
-    // Enter 快捷鍵
-    document.getElementById("user-input").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        const val = e.target.value;
-        if (val) renderUser(val);
+      // 檢查瀏覽器是否支援 Geolocation API
+      if (!navigator.geolocation) {
+        setStatus('error', '❌ 錯誤：您的瀏覽器不支援地理位置功能');
+        return;
       }
+
+      setButtonState('locating');
+      setStatus('info', '📍 正在請求位置權限，請點擊「允許」...');
+
+      // 請求位置資訊
+      navigator.geolocation.getCurrentPosition(
+        // 成功取得位置
+        (position) => {
+          // 精準至小數點後 6 位
+          const lat = parseFloat(position.coords.latitude.toFixed(6));
+          const lng = parseFloat(position.coords.longitude.toFixed(6));
+          
+          const payload = {
+            teamCode: teamCode,
+            name: name,
+            uuid: getDeviceUUID(),
+            latitude: lat,
+            longitude: lng,
+            timestamp: getTaipeiTime()
+          };
+
+          sendDataToGAS(payload);
+        },
+        // 取得位置失敗
+        (error) => {
+          setButtonState('reset');
+          let errorMsg = '❌ 定位失敗：';
+          switch(error.code) {
+            case error.PERMISSION_DENIED: errorMsg += '您拒絕了位置權限'; break;
+            case error.POSITION_UNAVAILABLE: errorMsg += '無法獲取位置資訊'; break;
+            case error.TIMEOUT: errorMsg += '定位請求超時，請重試'; break;
+            default: errorMsg += '發生未知錯誤'; break;
+          }
+          setStatus('error', errorMsg);
+        },
+        // Geolocation 選項
+        {
+          enableHighAccuracy: true, // 要求高精準度
+          timeout: 10000,           // 10秒超時
+          maximumAge: 0             // 不使用快取位置
+        }
+      );
     });
 
-    // 啟動地圖
-    window.addEventListener("DOMContentLoaded", initMap);
+    // 5. 將 Payload 傳送至 Google Apps Script Web App
+    function sendDataToGAS(payload) {
+      setButtonState('sending');
+      setStatus('info', '🚀 定位成功！正在傳送資料至伺服器...');
+
+      fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors', // ⚠️ 關鍵：GAS 跨域請求需要 no-cors
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        /* 注意：
+           在 `no-cors` 模式下，fetch 不會拋出 CORS 錯誤，但會返回 Opaque response。
+           我們無法讀取 response.ok 或 HTTP status code。
+           只要沒有觸發 catch 網路異常（如斷網），我們就預設視為送出成功。
+        */
+        setButtonState('reset');
+        setStatus('success', '✅ 資料已成功送出！');
+      })
+      .catch(error => {
+        setButtonState('reset');
+        setStatus('error', '❌ 網路錯誤：資料傳送失敗，請檢查網路連線。');
+        console.error('Fetch 錯誤:', error);
+      });
+    }
   </script>
 </body>
 </html>
