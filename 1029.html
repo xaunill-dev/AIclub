@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>山徑小組打卡中心</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynhZwqJT6NlgPKMZufh8Mg4Vihy=" crossorigin="">
+<style>
+:root{--ink:#1f2d26;--muted:#68756d;--paper:#f7f5ee;--line:#d9ddd3;--green:#234f42;--red:#d94343}*{box-sizing:border-box}body{margin:0;color:var(--ink);font-family:"Microsoft JhengHei",sans-serif;background:radial-gradient(circle at 90% 0,#e5ead8,transparent 28%),var(--paper)}button,input,select{font:inherit}main{max-width:1400px;margin:auto;padding:16px}header{display:flex;justify-content:space-between;align-items:end;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:20px}small{font:700 11px ui-monospace;color:#72806a}h1,h2{font-family:Georgia,"Microsoft JhengHei",serif}h1{font-size:clamp(24px,4vw,48px);margin:7px 0 0}h2{font-size:24px;margin:8px 0 16px}.tabs{display:flex;border:1px solid #bac2b6;border-radius:999px;padding:4px}.tabs button{border:0;background:transparent;padding:12px 20px;border-radius:999px;cursor:pointer;font-weight:700}.tabs .on{background:var(--green);color:white}.page{display:none}.page.on{display:block}.team{display:grid;grid-template-columns:minmax(320px, 380px) 1fr;gap:22px}.card,.table{background:#fffdf8;border:1px solid var(--line);border-radius:20px;box-shadow:0 16px 50px #354b3b12}.card{padding:24px;align-self:start}.card label{display:grid;gap:7px;margin:16px 0;font-size:14px;font-weight:700}.card input,.card select{padding:16px;border:1px solid #cdd3ca;border-radius:11px;background:white;font-size:16px} .coords{border-left:3px solid #b9cb55;background:#f3f5e9;padding:14px;display:grid;font-size:13px;margin-bottom:16px}.coords strong,.metric b{font:700 14px ui-monospace}.wide{width:100%;border:0;border-radius:12px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;transition:0.2s}.locate{background:var(--green);color:white;box-shadow:0 8px 20px #234f4233}.locate:disabled{background:#a9b5af;cursor:not-allowed}.status{text-align:center;color:var(--muted);font-size:13px;margin-top:12px;min-height:20px}.metrics{display:grid;grid-template-columns:1fr;gap:8px;margin-top:16px}.metric{background:#f3f2ec;border-radius:9px;padding:12px;display:flex;justify-content:space-between;align-items:center;font-size:13px}.danger{background:#fce8e6;color:var(--red)}.map{border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 16px 50px #354b3b12;margin-bottom:12px}.map .leaflet-map{height:450px;width:100%}.leaflet-popup-content{font-family:"Microsoft JhengHei",sans-serif;line-height:1.55}.leaflet-control-attribution{font-size:10px!important}.map text{font:700 13px ui-monospace;fill:#26352d;paint-order:stroke;stroke:#f7f5ee;stroke-width:5}.route{display:flex;gap:10px;overflow-x:auto;padding:10px 2px;scroll-snap-type:x mandatory}.route button{min-width:100px;scroll-snap-align:start;border:1px solid var(--line);border-radius:11px;padding:12px;background:white;text-align:left;display:grid;cursor:pointer}.route .now{background:var(--green);color:white}.route em{font-size:11px;color:var(--muted);font-style:normal}.route .now em{color:#a9d1c3}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}.stats div{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;display:grid}.stats b{font:800 24px ui-monospace}.red{color:var(--red)}.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0;font-size:13px}.filters button{border:1px solid var(--line);background:white;border-radius:999px;padding:10px 14px;cursor:pointer}.filters button.yes{background:var(--c);color:white}.filters label{margin-left:auto;display:flex;align-items:center;gap:6px;padding:8px 0}.sync-btn{border:1px solid var(--green)!important;color:var(--green);font-weight:700}.table{margin-top:20px;overflow:hidden}.tablehead{display:flex;justify-content:space-between;align-items:center;padding:20px 22px 12px;flex-wrap:wrap;gap:12px}.tablehead h2{margin:4px 0}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}th,td{text-align:left;padding:14px 16px;border-top:1px solid #e6e8e1}th{font-size:12px;color:var(--muted)}td i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}.alert{background:#fff1ef}mark{background:var(--red);color:#fff;border-radius:999px;padding:4px 8px;margin-left:6px}.empty{text-align:center;color:var(--muted);padding:40px}footer{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);margin-top:24px;padding-top:14px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:850px){header{align-items:start;flex-direction:column;gap:14px}.tabs{width:100%;display:grid;grid-template-columns:1fr 1fr}.tabs button{text-align:center}.team{grid-template-columns:1fr}.map .leaflet-map{height:350px}.filters label{margin-left:0;width:100%}}
+.login-gate{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#173d33 0%,#2d5b4d 58%,#dfe9a0 140%);display:grid;place-items:center;padding:20px}.login-gate.hidden{display:none}.login-box{width:min(100%,430px);background:#fffdf8;border-radius:28px;padding:28px;box-shadow:0 28px 80px #10291f55}.login-box h2{margin:8px 0}.login-box p{color:var(--muted);font-size:14px;line-height:1.6}.group-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}.group-grid button{min-height:58px;border:1px solid var(--line);border-radius:14px;background:white;font-weight:800;font-size:16px}.group-grid button.selected{background:var(--green);color:#fff;border-color:var(--green)}.login-enter{min-height:54px}.user-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;background:white;padding:8px 12px;font-size:13px;font-weight:700}.layer-help{font-size:11px;color:var(--muted);margin:8px 0}.leaflet-control-layers{font-size:14px}.planned-label{background:#fff!important;border:2px solid currentColor!important;border-radius:8px!important;box-shadow:0 2px 10px #0002!important;font-weight:800!important;padding:2px 6px!important}.planned-label:before{display:none!important}
+.team-records{margin-top:18px}.record-cards{display:none}.sync-state{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:800}.sync-state.cloud{background:#e4f1eb;color:#176347}.sync-state.local{background:#fff0d6;color:#8a5a00}.current-location-icon{width:22px;height:22px;border:4px solid white;border-radius:50%;background:#1677ff;box-shadow:0 0 0 5px #1677ff44,0 3px 12px #0005}.mobile-section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+@media(max-width:600px){html,body{width:100%;overflow-x:hidden}body{padding-bottom:calc(82px + env(safe-area-inset-bottom));background:#f3f4ef}main{padding:10px 10px 18px;max-width:none}header{margin:0 0 10px;padding:8px 4px 12px;gap:10px}header h1{font-size:23px;line-height:1.12}header small{font-size:9px}.team{display:flex;flex-direction:column;gap:12px}.card{padding:16px;border-radius:18px;box-shadow:none}.card h2{font-size:21px;margin-bottom:12px}.card label{font-size:14px;margin:12px 0}.card select,.card input{width:100%;min-height:52px;font-size:16px;padding:12px}.coords{padding:11px;margin-bottom:10px}.wide{min-height:58px;font-size:17px}.status{font-size:13px}.map{border-radius:16px;margin:0;box-shadow:none}.map .leaflet-map{height:48vh;min-height:320px}.leaflet-control-layers{max-width:210px;font-size:12px}.leaflet-control-layers-expanded{padding:8px}.stats{grid-template-columns:1fr 1fr;gap:8px}.stats div{padding:11px}.stats b{font-size:19px}.filters{background:white;border:1px solid var(--line);padding:10px;border-radius:14px}.filters button{min-height:42px;padding:8px 11px}.filters label{margin-left:0;width:100%}.route{padding:9px 0}.route button{min-width:92px;min-height:58px;padding:9px}.table{border-radius:14px;box-shadow:none}.team-records .table{display:none}#adminPage .table table{min-width:780px}.record-cards{display:grid;gap:9px}.record-card{background:white;border:1px solid var(--line);border-left:5px solid var(--group-color);border-radius:14px;padding:12px;display:grid;gap:6px}.record-card.alert{background:#fff4f2;border-color:#f0b6ae}.record-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.record-card-title{font-weight:800}.record-card-meta{display:grid;grid-template-columns:1fr 1fr;gap:5px;color:var(--muted);font-size:12px}.record-card-meta b{color:var(--ink)}.tabs{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:900;background:#fff;padding:5px;box-shadow:0 8px 32px #0003;width:auto;display:grid;grid-template-columns:1fr 1fr}.tabs button{min-height:48px}.group-grid{grid-template-columns:1fr 1fr}.login-box{padding:22px}.login-gate{padding:12px}.login-box{border-radius:22px}.scroll{max-height:none}footer{padding-bottom:8px}}
+</style>
+</head>
+<body><div class="login-gate" id="loginGate"><div class="login-box"><small>MOBILE CHECK-IN</small><h2>選擇小組登入</h2><p>選擇本機使用的小組，系統會記住設定；之後可從右上角切換。</p><div class="group-grid" id="loginGroups"></div><button class="wide submit login-enter" id="loginEnter" disabled>進入打卡頁 →</button></div></div><main>
+<header>
+  <div><small>TRAIL OPERATIONS / 2026</small><h1>山徑小組打卡中心</h1></div>
+  <div style="position:absolute; right:12px; top:12px; display:flex; gap:8px; z-index:100;">
+    <select id="globalLayerSelect" class="user-chip" style="position:relative; right:auto; top:auto; cursor:pointer; outline:none; border-color:var(--green); background:white;">
+      <option value="openTopo">🗺️ OpenTopo 地形圖</option>
+      <option value="osm">🗺️ 標準 OpenStreetMap</option>
+      <option value="rudy">⛰️ 魯地圖 (登山)</option>
+      <option value="taiwanEMap2">🇹🇼 通用電子地圖</option>
+    </select>
+    <button class="user-chip" id="switchGroup" style="position:relative; right:auto; top:auto;">尚未選組</button>
+  </div>
+  <div class="tabs">
+    <button class="on" data-page="teamPage">小組打卡</button>
+    <button data-page="adminPage">後台監控</button>
+  </div>
+</header>
+<section id="teamPage" class="page on"><div class="team"><div class="card"><small>01 / 身分與點位</small><h2>準備打卡</h2>
+<label>組別<select id="group"></select></label>
+<label>預計前往點位<select id="planned"></select></label>
+<label>本次點位名稱 (選填)<input id="pointName" placeholder="例如：稜線入口 / 休息點"></label>
+<div class="coords">標示位置<strong id="targetCoords">—</strong></div>
+<button class="wide locate" id="locate">◎ 定位並立即打卡</button>
+<p class="status" id="status">準備就緒</p>
+<div id="metrics"></div>
+</div><div><div id="teamMap"></div><div id="route" class="route"></div></div></div>
+<div class="team-records">
+  <div class="mobile-section-title"><div><small>MY CHECK-IN LOG</small><h2>本組打卡紀錄</h2></div><button class="sync-btn" id="teamSyncBtn">↻ 更新</button></div>
+  <div class="record-cards" id="teamRecordCards"></div>
+  <div class="table"><div class="scroll"><table><thead><tr><th>時間</th><th>點位</th><th>名稱</th><th>座標</th><th>距離</th><th>同步</th></tr></thead><tbody id="teamRows"></tbody></table></div></div>
+</div></section>
+<section id="adminPage" class="page"><div class="stats"><div><small>累計打卡</small><b id="total">0</b></div><div><small>已回報組別</small><b id="reported">0 / 7</b></div><div><small>偏差警示</small><b id="alerts" class="red">0</b></div><div><small>最近更新</small><b id="updated">—</b></div></div><div class="filters"><b>顯示組別</b><span id="groupFilters"></span><button class="sync-btn" id="syncBtn">↻ 同步雲端</button><label><input type="checkbox" id="showPlans" checked> 顯示預計路線</label></div><div id="adminMap"></div><div class="table"><div class="tablehead"><div><small>LIVE LOG</small><h2>打卡紀錄</h2></div></div><div class="scroll"><table><thead><tr><th>時間</th><th>組別</th><th>預計點位</th><th>標註名稱</th><th>TWD97 座標</th><th>定位精度</th><th>絕對距離</th></tr></thead><tbody id="rows"></tbody></table></div></div></section>
+<footer><span>底圖圖資：OpenStreetMap / OpenTopoMap</span><span>座標系統：WGS84 轉換 TWD97 TM2（EPSG:3826）</span></footer></main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const COLORS=["#ef6a4c","#2f8c78","#d5a62e","#6750a4","#2c6daa","#b64e75","#69782d"];
+const raw={1:[["A1","0850,8178"],["A2","0848,8326"],["A3","0923,8369"],["A4","0939,8320"],["A5","0934,8290","13:45通過"],["A6","0964,8208"],["A7","0925,8118","小巴站牌"],["A8","0901,8136"],["A9","0879,8080"]],2:[["B1","0850,8178"],["B2","0864,8253"],["B3","0860,8358"],["B4","0923,8369"],["B5","0939,8320"],["B6","0934,8290","13:45通過"],["B7","0964,8208"],["B8","0925,8118","小巴站牌"],["B9","0906,8105"],["B10","0879,8080"]],3:[["C1","0867,8039"],["C2","0873,8178"],["C3","0860,8190"],["C4","0887,8247"],["C5","0934,8290","13:45通過"],["C6","0991,8140"],["C7","0925,8118","小巴站牌"],["C8","0879,8080"]],4:[["D1","0859,8015"],["D2","0860,8190"],["D3","0864,8253"],["D4","0891,8276"],["D5","0934,8290","13:45通過"],["D6","0991,8140"],["D7","0925,8118","小巴站牌"],["D8","0879,8080"]],5:[["E1","0879,8080"],["E2","0860,8190"],["E3","0864,8253"],["E4","0865,8279"],["E5","0934,8290","13:45通過"],["E6","0971,8239"],["E7","0964,8173"],["E8","0925,8118","小巴站牌"],["E9","0876,8140"]],6:[["F1","0848,8094"],["F2","0822,8302"],["F3","0848,8326"],["F4","0939,8320"],["F5","0934,8290","13:45通過"],["F6","0971,8239"],["F7","0964,8173"],["F8","0925,8118","小巴站牌"],["F9","0879,8080"]],7:[["G1","0848,8094"],["G2","0804,8257"],["G3","0848,8326"],["G4","0897,8339"],["G5","0934,8290","13:45通過"],["G6","0964,8173"],["G7","0925,8118","小巴站牌"],["G8","0901,8136"],["G9","0879,8080"]]};
+
+function conv(x,y){const a=6378137,b=6356752.314245,l0=121*Math.PI/180,k=.9999,e=Math.sqrt(1-b*b/a/a),X=x-250000,M=y/k,mu=M/(a*(1-e*e/4-3*e**4/64-5*e**6/256)),e1=(1-Math.sqrt(1-e*e))/(1+Math.sqrt(1-e*e)),fp=mu+(3*e1/2-27*e1**3/32)*Math.sin(2*mu)+(21*e1**2/16-55*e1**4/32)*Math.sin(4*mu)+151*e1**3/96*Math.sin(6*mu)+1097*e1**4/512*Math.sin(8*mu),e2=e*e/(1-e*e),c=e2*Math.cos(fp)**2,t=Math.tan(fp)**2,r=a*(1-e*e)/(1-e*e*Math.sin(fp)**2)**1.5,n=a/Math.sqrt(1-e*e*Math.sin(fp)**2),d=X/n/k,lat=fp-n*Math.tan(fp)/r*(d*d/2-(5+3*t+10*c-4*c*c-9*e2)*d**4/24+(61+90*t+298*c+45*t*t-252*e2-3*c*c)*d**6/720),lon=l0+(d-(1+2*t+c)*d**3/6+(5-2*c+28*t-3*c*c+8*e2+24*t*t)*d**5/120)/Math.cos(fp);return[lat*180/Math.PI,lon*180/Math.PI]}
+
+// WGS84 -> TWD97 TM2 (已修復數學符號遺失問題)
+function wgs84ToTwd97(lat, lon) {
+    const a = 6378137.0, b = 6356752.314245;
+    const lon0 = 121 * Math.PI / 180, k0 = 0.9999, dx = 250000;
+    const e2 = (Math.pow(a, 2) - Math.pow(b, 2)) / Math.pow(a, 2);
+    const eprime2 = (Math.pow(a, 2) - Math.pow(b, 2)) / Math.pow(b, 2);
+    const latRad = lat * Math.PI / 180, lonRad = lon * Math.PI / 180;
+    const nu = a / Math.sqrt(1 - e2 * Math.pow(Math.sin(latRad), 2));
+    const p = lonRad - lon0;
+    const A = a * (1 - e2 / 4 - 3 * Math.pow(e2, 2) / 64 - 5 * Math.pow(e2, 3) / 256);
+    const B = a * (3 * e2 / 8 + 3 * Math.pow(e2, 2) / 32 + 45 * Math.pow(e2, 3) / 1024);
+    const C = a * (15 * Math.pow(e2, 2) / 256 + 45 * Math.pow(e2, 3) / 1024);
+    const D = a * (35 * Math.pow(e2, 3) / 3072);
+    const M = A * latRad - B * Math.sin(2 * latRad) + C * Math.sin(4 * latRad) - D * Math.sin(6 * latRad);
+    const t = Math.pow(Math.tan(latRad), 2), C2 = eprime2 * Math.pow(Math.cos(latRad), 2), A2 = p * Math.cos(latRad);
+    const x = k0 * nu * (A2 + (1 - t + C2) * Math.pow(A2, 3) / 6 + (5 - 18 * t + Math.pow(t, 2) + 72 * C2 - 58 * eprime2) * Math.pow(A2, 5) / 120) + dx;
+    const y = k0 * (M + nu * Math.tan(latRad) * (Math.pow(A2, 2) / 2 + (5 - t + 9 * C2 + 4 * Math.pow(C2, 2)) * Math.pow(A2, 4) / 24 + (61 - 58 * t + Math.pow(t, 2) + 600 * C2 - 330 * eprime2) * Math.pow(A2, 6) / 720));
+    return { x: Math.round(x), y: Math.round(y) };
+}
+
+let routes={};function buildFallbackRoutes(){routes={};for(const[g,list]of Object.entries(raw))routes[g]=list.map(([id,s,note])=>{const[a,b]=s.split(','),x=300000+Number(a)*10,y=2700000+Number(b)*10,[lat,lon]=conv(x,y);return{id,note,lat,lon,twd_raw:s,twdX:x,twdY:y}})}buildFallbackRoutes();
+let position=null,currentFix=null,selected=[1,2,3,4,5,6,7],data=JSON.parse(localStorage.getItem('trail-checkins')||'[]');
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),group=$('#group'),planned=$('#planned');
+for(let g=1;g<=7;g++)group.add(new Option(`第 ${g} 組・小${g}`,g));
+function fillPoints(){planned.innerHTML='';for(const p of routes[group.value])planned.add(new Option(p.id+(p.note?'・'+p.note:''),p.id));renderTeam()}
+function target(){return routes[group.value].find(p=>p.id===planned.value)}
+function hav(a,b,c,d){const R=6371000,q=Math.PI/180,z=Math.sin((c-a)*q/2)**2+Math.cos(a*q)*Math.cos(c*q)*Math.sin((d-b)*q/2)**2;return 2*R*Math.asin(Math.sqrt(z))}
+function fmt(s){return new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(s))}
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
+// === 新增：全域圖資設定 ===
+const MAP_SOURCES = {
+  openTopo: { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', maxZoom: 17, attr: 'OpenTopoMap' },
+  osm: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', maxZoom: 19, attr: 'OpenStreetMap' },
+  rudy: { url: 'https://tiles.rudymap.tw/latest/{z}/{x}/{y}.png', minZoom: 7, maxZoom: 18, attr: '魯地圖' },
+  taiwanEMap2: { url: 'https://wmts.nlsc.gov.tw/wmts/EMAP2/default/GoogleMapsCompatible/{z}/{y}/{x}', maxZoom: 19, attr: '內政部國土測繪中心' }
+};
+let currentMapLayer = localStorage.getItem('trail-map-layer') || 'openTopo';
+const activeTileLayers = new Map();
+let mapSeq=0;const mapInstances=new Map();
+
+function mapHtml(groups,plans=true){const id='leaflet-map-'+(++mapSeq);setTimeout(()=>initFreeMap(id,[...groups],plans),0);return `<div class="map"><div class="leaflet-map" id="${id}" aria-label="地圖"></div></div>`}
+
+// === 修改：地圖產生邏輯（修復圖磚破碎與記憶體洩漏） ===
+function initFreeMap(id, groups, plans) {
+  // 1. 垃圾回收：清理已經從 DOM 中被 innerHTML 抹除的舊地圖實體
+  mapInstances.forEach((mapObj, mapId) => {
+    if (!document.getElementById(mapId)) {
+      mapObj.remove(); // 徹底銷毀 Leaflet 實體，中斷無效的圖磚網路請求
+      mapInstances.delete(mapId);
+      activeTileLayers.delete(mapId);
+    }
+  });
+
+  const el = document.getElementById(id);
+  if (!el || typeof L === 'undefined') return;
+
+  // 2. 核心修復：如果地圖所在的標籤頁目前是隱藏的 (長寬為0)
+  // 不要馬上初始化，而是掛上監聽器，等切換分頁出現長寬後再渲染
+  if (el.clientWidth === 0 || el.clientHeight === 0) {
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth > 0) {
+        observer.disconnect();
+        initFreeMap(id, groups, plans); // 容器可見後，重新執行初始化
+      }
+    });
+    observer.observe(el);
+    return;
+  }
+
+  // 以下為原有的地圖初始化與圖層設定邏輯
+  const map = L.map(el, { zoomControl: true, attributionControl: true });
+  mapInstances.set(id, map);
+
+  const src = MAP_SOURCES[currentMapLayer];
+  const layer = L.tileLayer(src.url, { minZoom: src.minZoom || 0, maxZoom: src.maxZoom, attribution: src.attr }).addTo(map);
+  activeTileLayers.set(id, layer);
+
+  const bounds = [];
+  for (const g of groups) {
+    const color = COLORS[g - 1], route = routes[g];
+    if (plans && route) {
+      L.polyline(route.map(p => [p.lat, p.lon]), { color, weight: 3, opacity: .65, dashArray: '7 8' }).addTo(map);
+      route.forEach(p => {
+        bounds.push([p.lat, p.lon]);
+        L.circleMarker([p.lat, p.lon], { radius: 7, color, weight: 3, fillColor: '#fff', fillOpacity: 1 })
+          .addTo(map).bindTooltip(`<b>${p.id}</b>${p.note ? `<br>${p.note}` : ''}`, { direction: 'top', permanent: true, className: 'planned-label', opacity: .92 });
+      });
+    }
+    const actual = data.filter(c => c.groupId == g).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    if (actual.length) L.polyline(actual.map(c => [c.latitude, c.longitude]), { color, weight: 5, opacity: .9 }).addTo(map);
+    actual.forEach(c => {
+      bounds.push([c.latitude, c.longitude]);
+      L.circleMarker([c.latitude, c.longitude], { radius: 9, color: '#fff', weight: 3, fillColor: c.distanceMeters > 100 ? '#d94343' : color, fillOpacity: 1 })
+        .addTo(map).bindPopup(`<b>第 ${g} 組・${c.pointName}</b><br>預計點位：${c.plannedPoint}<br>TWD97：${c.twd97}<br>打卡時間：${fmt(c.createdAt)}<br>距離偏差：${Math.round(c.distanceMeters)} m`);
+    });
+  }
+
+  if (currentFix && groups.includes(Number(currentFix.groupId))) {
+    const here = L.divIcon({ className: '', html: '<div class="current-location-icon"></div>', iconSize: [22, 22], iconAnchor: [11, 11] });
+    L.marker([currentFix.latitude, currentFix.longitude], { icon: here, zIndexOffset: 1000 }).addTo(map)
+      .bindPopup(`<b>本次打卡位置</b><br>${esc(currentFix.pointName)}<br>${currentFix.latitude.toFixed(6)}, ${currentFix.longitude.toFixed(6)}`).openPopup();
+    L.circle([currentFix.latitude, currentFix.longitude], { radius: Math.max(5, Number(currentFix.accuracy) || 0), color: '#1677ff', weight: 1, fillColor: '#1677ff', fillOpacity: .08 }).addTo(map);
+    bounds.push([currentFix.latitude, currentFix.longitude]);
+  }
+
+  if (bounds.length) {
+    map.fitBounds(bounds, { padding: [28, 28], maxZoom: 17 });
+  } else {
+    map.setView([25.1433, 121.5802], 15);
+  }
+  
+  L.control.scale({ imperial: false }).addTo(map);
+}
+function renderTeam(){
+  const p=target();
+  $('#targetCoords').textContent=`${p.twd_raw}`;
+  $('#teamMap').innerHTML=mapHtml([+group.value]);
+  $('#route').innerHTML=routes[group.value].map((p,i)=>`<button class="${planned.value==p.id?'now':''}" data-point="${p.id}"><small>${String(i+1).padStart(2,'0')}</small>${p.id}<em>${p.note||'預計點'}</em></button>`).join('');
+  $$('[data-point]').forEach(b=>b.onclick=()=>{planned.value=b.dataset.point;renderTeam();});
+  renderRecordTables();
+}
+
+function renderAdmin(){
+  const shown=data.filter(c=>selected.includes(c.groupId));
+  $('#total').textContent=data.length;
+  $('#reported').textContent=`${new Set(data.map(c=>c.groupId)).size} / 7`;
+  $('#alerts').textContent=data.filter(c=>c.distanceMeters>100).length;
+  $('#updated').textContent=data.length?fmt(data.at(-1).createdAt):'—';
+  $('#adminMap').innerHTML=mapHtml(selected,$('#showPlans').checked);
+  $('#rows').innerHTML=shown.slice().reverse().map(c=>`<tr class="${c.distanceMeters>100?'alert':''}"><td>${fmt(c.createdAt)}</td><td><i style="background:${COLORS[c.groupId-1]}"></i>第${c.groupId}組</td><td>${esc(c.plannedPoint)}</td><td>${esc(c.pointName)}</td><td>${esc(c.twd97 || '—')}</td><td>±${Math.round(c.accuracy||0)}m</td><td><b>${Math.round(c.distanceMeters)}m</b>${c.distanceMeters>100?'<mark>偏差</mark>':''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">尚無打卡資料</td></tr>';
+  renderRecordTables();
+}
+
+function renderRecordTables(){
+  const mine=data.filter(c=>Number(c.groupId)===Number(group.value)).slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const empty='<tr><td colspan="6" class="empty">本組尚無打卡紀錄</td></tr>';
+  $('#teamRows').innerHTML=mine.map(c=>`<tr class="${c.distanceMeters>100?'alert':''}"><td>${fmt(c.createdAt)}</td><td>${esc(c.plannedPoint)}</td><td>${esc(c.pointName)}</td><td>${esc(c.twd97 || (Number(c.latitude).toFixed(6) + ', ' + Number(c.longitude).toFixed(6)))}</td><td>${Math.round(c.distanceMeters)}m</td><td><span class="sync-state ${c.pending?'local':'cloud'}">${c.pending?'待同步':'已上傳'}</span></td></tr>`).join('')||empty;
+  $('#teamRecordCards').innerHTML=mine.map(c=>`<article class="record-card ${c.distanceMeters>100?'alert':''}" style="--group-color:${COLORS[c.groupId-1]}"><div class="record-card-head"><span class="record-card-title">${esc(c.plannedPoint)}・${esc(c.pointName)}</span><span class="sync-state ${c.pending?'local':'cloud'}">${c.pending?'待同步':'已上傳'}</span></div><small>${fmt(c.createdAt)}</small><div class="record-card-meta"><span>距離 <b>${Math.round(c.distanceMeters)}m</b></span><span>精度 <b>±${Math.round(c.accuracy||0)}m</b></span><span style="grid-column:1/-1">座標 <b>${esc(c.twd97||'—')}</b></span></div></article>`).join('')||'<div class="empty">本組尚無打卡紀錄</div>';
+}
+
+function syncFromSheet(){
+  const buttons = [$('#syncBtn'), $('#teamSyncBtn')].filter(Boolean);
+  buttons.forEach(btn=>btn.textContent = '同步中…');
+  if (typeof google === 'undefined' || !google.script) {
+    buttons.forEach(btn=>btn.textContent = '↻ 僅限 GAS');
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(function(records) {
+      const pending=data.filter(record=>record.pending);
+      const cloud=(records || []).map(record=>({...record, pending:false}));
+      const cloudIds=new Set(cloud.map(record=>String(record.id)));
+      data=[...cloud,...pending.filter(record=>!cloudIds.has(String(record.id)))];
+      localStorage.setItem('trail-checkins', JSON.stringify(data));
+      renderTeam(); renderAdmin();
+      buttons.forEach(btn=>btn.textContent = '↻ 更新');
+    })
+    .withFailureHandler(function(err) {
+      console.warn('同步失敗：', err);
+      buttons.forEach(btn=>btn.textContent = '↻ 同步失敗');
+    }).getRecords();
+}
+
+function saveLocalRecord(row, pending){
+  const next={...row,pending:!!pending};
+  data=data.filter(item=>String(item.id)!==String(next.id));
+  data.push(next);
+  localStorage.setItem('trail-checkins',JSON.stringify(data));
+  renderTeam();
+  renderAdmin();
+}
+
+function initMobileLogin(){const gate=$('#loginGate'),grid=$('#loginGroups'),saved=Number(localStorage.getItem('trail-group')||0);let choice=saved;grid.innerHTML=[1,2,3,4,5,6,7].map(g=>`<button data-login-group="${g}" class="${g===choice?'selected':''}">第 ${g} 組・小${g}</button>`).join('');const update=()=>{$$('[data-login-group]').forEach(b=>b.classList.toggle('selected',+b.dataset.loginGroup===choice));$('#loginEnter').disabled=!choice};$$('[data-login-group]').forEach(b=>b.onclick=()=>{choice=+b.dataset.loginGroup;update()});$('#loginEnter').onclick=()=>{if(!choice)return;localStorage.setItem('trail-group',choice);group.value=choice;fillPoints();$('#switchGroup').textContent=`第 ${choice} 組・小${choice}`;gate.classList.add('hidden')};$('#switchGroup').onclick=()=>gate.classList.remove('hidden');if(saved){group.value=saved;$('#switchGroup').textContent=`第 ${saved} 組・小${saved}`;gate.classList.add('hidden')}update()}
+function loadWaypointConfig(){if(typeof google==='undefined'||!google.script)return;google.script.run.withSuccessHandler(rows=>{if(!Array.isArray(rows)||!rows.length)return;routes={};rows.filter(r=>r.enabled!==false).forEach(r=>{const g=String(r.groupId);(routes[g]??=[]).push({id:String(r.pointId),note:r.note||'',lat:Number(r.latitude),lon:Number(r.longitude),twd_raw:r.twdShort||'',twdX:Number(r.twdX),twdY:Number(r.twdY),sequence:Number(r.sequence)||999})});Object.values(routes).forEach(list=>list.sort((a,b)=>a.sequence-b.sequence));fillPoints();renderAdmin()}).withFailureHandler(err=>console.warn('點位設定載入失敗，使用內建備援：',err)).getWaypoints()}
+group.onchange=()=>{localStorage.setItem('trail-group',group.value);$('#switchGroup').textContent=`第 ${group.value} 組・小${group.value}`;fillPoints()};planned.onchange=renderTeam;
+
+$('#locate').onclick=()=>{
+  const btn = $('#locate');
+  btn.disabled = true;
+  btn.textContent = '定位中並準備上傳...';
+  $('#status').textContent = '正在獲取 GPS 座標...';
+  
+  navigator.geolocation.getCurrentPosition(p=>{
+    position = p;
+    const t = target();
+    const d = hav(p.coords.latitude, p.coords.longitude, t.lat, t.lon);
+    
+    const twd97 = wgs84ToTwd97(p.coords.latitude, p.coords.longitude);
+    const twd97Str = `${twd97.x}, ${twd97.y}`;
+    
+    $('#metrics').innerHTML=`<div class="metrics">
+      <span class="metric"><span>TWD97 座標</span><b>${twd97Str}</b></span>
+      <span class="metric"><span>定位精度</span><b>± ${Math.round(p.coords.accuracy)} m</b></span>
+      <span class="metric ${d>100?'danger':''}"><span>距目標點位</span><b>${Math.round(d)} m</b></span>
+    </div>`;
+    
+    $('#status').textContent = '定位完成！正在自動回傳至雲端...';
+
+    const row={
+      id: Date.now(),
+      groupId: +group.value,
+      device: '小'+group.value,
+      plannedPoint: t.id,
+      pointName: $('#pointName').value || t.id,
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      twd97: twd97Str,
+      accuracy: position.coords.accuracy,
+      distanceMeters: d,
+      createdAt: new Date().toISOString()
+    };
+    
+    currentFix=row;
+    renderTeam();
+
+    if (typeof google !== 'undefined' && google.script) {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          const saved=(result && result.savedRecord) ? result.savedRecord : row;
+          saveLocalRecord(saved,false);
+          $('#status').innerHTML = `✅ <strong style="color:var(--green)">打卡成功！已寫入試算表第 ${result && result.row ? result.row : '—'} 列</strong>`;
+          btn.disabled = false;
+          btn.textContent = '◎ 再次定位並打卡';
+          $('#pointName').value = '';
+        })
+        .withFailureHandler(function(err) {
+          console.warn(err);
+          saveLocalRecord(row,true);
+          const message=err && err.message ? err.message : String(err || '未知錯誤');
+          $('#status').innerHTML = `⚠️ <strong>雲端上傳失敗，已暫存於本機</strong><br><small>${esc(message)}</small>`;
+          btn.disabled = false;
+          btn.textContent = '◎ 再次定位並打卡';
+          $('#pointName').value = '';
+        })
+        .saveRecord(row);
+    } else {
+      saveLocalRecord(row,true);
+      $('#status').textContent='✅ 打卡完成（本機預覽模式）';
+      btn.disabled = false;
+      btn.textContent = '◎ 再次定位並打卡';
+      $('#pointName').value = '';
+    }
+    
+  }, e => {
+    $('#status').textContent = '定位失敗：' + e.message;
+    btn.disabled = false;
+    btn.textContent = '◎ 重新嘗試定位';
+  }, { enableHighAccuracy: true, timeout: 15000 });
+};
+
+$('#syncBtn').onclick=syncFromSheet;
+$('#teamSyncBtn').onclick=syncFromSheet;
+for(let g=1;g<=7;g++)$('#groupFilters').insertAdjacentHTML('beforeend',`<button class="yes" style="--c:${COLORS[g-1]}" data-g="${g}">第${g}組</button>`);
+$$('[data-g]').forEach(b=>b.onclick=()=>{const g=+b.dataset.g;selected=selected.includes(g)?selected.filter(x=>x!=g):[...selected,g];b.classList.toggle('yes');renderAdmin()});
+$('#showPlans').onchange=renderAdmin;
+$$('.tabs button').forEach(b => b.onclick = () => {
+  // 1. 切換標籤與頁面的顯示狀態
+  $$('.tabs button, .page').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  $('#' + b.dataset.page).classList.add('on');
+  
+  if (b.dataset.page === 'adminPage') {
+    syncFromSheet();
+    renderAdmin();
+  }
+
+  // 2. 解決地圖破圖問題：延遲一點點時間等待畫面顯示後，強制地圖重新計算大小
+  setTimeout(() => {
+    mapInstances.forEach((map, id) => {
+      // 檢查地圖元素是否還存在畫面上
+      if (document.getElementById(id)) {
+        map.invalidateSize(); // 強制補齊未載入的圖資
+      } else {
+        mapInstances.delete(id); // 順手清掉看不見的舊地圖，釋放手機記憶體
+      }
+    });
+  }, 150);
+});
+// === 新增：監聽上方圖資選單切換 ===
+$('#globalLayerSelect').value = currentMapLayer;
+$('#globalLayerSelect').onchange = (e) => {
+  currentMapLayer = e.target.value;
+  localStorage.setItem('trail-map-layer', currentMapLayer); // 記憶使用者的圖資偏好
+  
+  // 即時替換所有已渲染地圖的圖層 (不需重整頁面)
+  mapInstances.forEach((map, id) => {
+    if (activeTileLayers.has(id)) {
+      map.removeLayer(activeTileLayers.get(id));
+    }
+    const src = MAP_SOURCES[currentMapLayer];
+    const newLayer = L.tileLayer(src.url, { 
+      minZoom: src.minZoom || 0, 
+      maxZoom: src.maxZoom, 
+      attribution: src.attr 
+    }).addTo(map);
+    activeTileLayers.set(id, newLayer);
+  });
+};
+
+fillPoints();
+initMobileLogin();
+renderAdmin();
+loadWaypointConfig();
+syncFromSheet();
+</script></body></html>
